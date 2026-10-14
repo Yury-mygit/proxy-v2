@@ -1,0 +1,26 @@
+services:
+  proxy:
+    build: .
+    container_name: proxy-service-8880
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PROXY_PORT: 8888
+      ADMIN_PORT: 8889
+      LOG_FILE: /var/log/proxy-service/proxy.log
+    ports:
+      - "0.0.0.0:8880:8888"
+      - "0.0.0.0:8881:8889"
+    volumes:
+      - ./logs:/var/log/proxy-service
+    networks:
+      - shared
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8889/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  shared:
+    external: true

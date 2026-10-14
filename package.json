@@ -1,0 +1,14 @@
+{
+  "name": "proxy-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Forward HTTP/HTTPS proxy with admin API and live logs",
+  "main": "app/main.js",
+  "scripts": {
+    "start": "node app/main.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.20.0"
+  }
+}
