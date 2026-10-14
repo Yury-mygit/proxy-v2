@@ -5,7 +5,8 @@
   "description": "Forward HTTP/HTTPS proxy with admin API and live logs",
   "main": "app/main.js",
   "scripts": {
-    "start": "node app/main.js"
+    "start": "node app/main.js",
+    "test": "node --test"
   },
   "dependencies": {
     "express": "^4.19.2",

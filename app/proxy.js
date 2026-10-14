@@ -4,8 +4,8 @@ const { URL } = require('node:url');
 const { authProxyHeader } = require('./auth');
 
 class ProxyManager {
-  constructor({ tokens, allowedHosts, audit }) {
-    this.tokens = tokens;
+  constructor({ credentials, allowedHosts, audit }) {
+    this.credentials = credentials;
     this.allowedHosts = allowedHosts;
     this.audit = audit;
     this.port = null;
@@ -99,7 +99,7 @@ class ProxyManager {
   handleConnect(req, clientSock, head) {
     const remote = clientSock.remoteAddress;
     const target = req.url || '';
-    const name = authProxyHeader(req.headers['proxy-authorization'], this.tokens);
+    const name = authProxyHeader(req.headers['proxy-authorization'], this.credentials);
     if (!name) return this.authReject(clientSock, 'connect:' + target);
 
     const [host, portStr] = target.split(':');
@@ -158,7 +158,7 @@ class ProxyManager {
 
   handleHttp(req, res) {
     const remote = req.socket.remoteAddress;
-    const name = authProxyHeader(req.headers['proxy-authorization'], this.tokens);
+    const name = authProxyHeader(req.headers['proxy-authorization'], this.credentials);
     if (!name) {
       this.stats.authFailures++;
       res.writeHead(407, { 'Proxy-Authenticate': 'Basic realm="proxy-service"', 'Content-Type': 'text/plain' });
