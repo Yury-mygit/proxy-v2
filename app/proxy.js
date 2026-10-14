@@ -3,6 +3,29 @@ const net = require('node:net');
 const { URL } = require('node:url');
 const { authProxyHeader } = require('./auth');
 
+function parseConnectTarget(target) {
+  if (!target) return null;
+
+  let host;
+  let portText;
+  if (target.startsWith('[')) {
+    const closingBracket = target.indexOf(']');
+    if (closingBracket < 2 || target[closingBracket + 1] !== ':') return null;
+    host = target.slice(1, closingBracket);
+    portText = target.slice(closingBracket + 2);
+  } else {
+    const separator = target.lastIndexOf(':');
+    if (separator <= 0 || target.indexOf(':') !== separator) return null;
+    host = target.slice(0, separator);
+    portText = target.slice(separator + 1);
+  }
+
+  if (!/^\d+$/.test(portText)) return null;
+  const port = Number(portText);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
+  return { host, port };
+}
+
 class ProxyManager {
   constructor({ credentials, allowedHosts, audit }) {
     this.credentials = credentials;
@@ -102,12 +125,12 @@ class ProxyManager {
     const name = authProxyHeader(req.headers['proxy-authorization'], this.credentials);
     if (!name) return this.authReject(clientSock, 'connect:' + target);
 
-    const [host, portStr] = target.split(':');
-    const port = parseInt(portStr || '443', 10);
-    if (!host || !port) {
+    const parsedTarget = parseConnectTarget(target);
+    if (!parsedTarget) {
       try { clientSock.end('HTTP/1.1 400 Bad Request\r\n\r\n'); } catch {}
       return;
     }
+    const { host, port } = parsedTarget;
     if (!this.hostAllowed(host)) {
       this.stats.forbidden++;
       this.audit.log({ kind: 'forbidden', user: name, target });
@@ -204,4 +227,4 @@ class ProxyManager {
   }
 }
 
-module.exports = { ProxyManager };
+module.exports = { ProxyManager, parseConnectTarget };
